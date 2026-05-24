@@ -9,8 +9,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/doter2410/avito-project/internal/core/transport/transport"
-	"github.com/doter2410/avito-project/internal/courier"
+	"github.com/doter2410/avito-project/internal/core/transport"
+	"github.com/doter2410/avito-project/internal/handler"
+	"github.com/doter2410/avito-project/internal/service"
+
+	// ДОБАВЛЯЕМ НАШИ НОВЫЕ СЛОИ ВМЕСТО internal/courier:
+
+	"github.com/doter2410/avito-project/internal/repository"
+
 	"github.com/doter2410/avito-project/internal/storage/postgres"
 	"github.com/joho/godotenv"
 	"github.com/spf13/pflag"
@@ -43,11 +49,22 @@ func main() {
 	}
 	defer psCon.Close()
 
-	storage := courier.NewStorage(psCon)
+	// ---------------------------------------------------------
+	// СБИРАЕМ ЧИСТУЮ АРХИТЕКТУРУ (Dependency Injection)
+	// ---------------------------------------------------------
 
-	handler := courier.NewHandler(storage)
+	// 1. Создаем репозиторий (слой БД)
+	repo := repository.NewCourierPostgres(psCon)
 
-	srv := transport.NewServer(port, logI, handler)
+	// 2. Создаем сервис (слой бизнес-логики), передаем ему БД
+	svc := service.NewCourierService(repo)
+
+	// 3. Создаем хэндлер (HTTP слой), передаем ему сервис
+	h := handler.NewCourierHandler(svc)
+
+	// 4. Передаем готовый хэндлер серверу
+	srv := transport.NewServer(port, logI, h)
+	// ---------------------------------------------------------
 
 	go func() {
 		err := srv.HttpServer.ListenAndServe()
@@ -62,5 +79,4 @@ func main() {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	srv.HttpServer.Shutdown(shutdownCtx)
-
 }

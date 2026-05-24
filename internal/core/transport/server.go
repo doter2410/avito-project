@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/doter2410/avito-project/internal/courier"
+	"github.com/doter2410/avito-project/internal/handler"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -14,7 +14,7 @@ type Server struct {
 	HttpServer *http.Server
 }
 
-func NewServer(port *string, logI *log.Logger, courierHandler *courier.Handler) *Server {
+func NewServer(port *string, logI *log.Logger, courierHandler *handler.CourierHandler) *Server {
 
 	r := chi.NewRouter()
 

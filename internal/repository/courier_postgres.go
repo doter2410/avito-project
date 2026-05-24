@@ -1,21 +1,22 @@
-package courier
+package repository
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/doter2410/avito-project/internal/model"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type Storage struct {
+type CourierPostgres struct {
 	pool *pgxpool.Pool
 }
 
-func NewStorage(pool *pgxpool.Pool) *Storage {
-	return &Storage{pool: pool}
+func NewCourierPostgres(pool *pgxpool.Pool) *CourierPostgres {
+	return &CourierPostgres{pool: pool}
 }
 
-func (s *Storage) CreateCourier(ctx context.Context, c Courier) (int64, error) {
+func (s *CourierPostgres) CreateCourier(ctx context.Context, c model.Courier) (int64, error) {
 	query := `INSERT INTO couriers (name, phone, status) VALUES ($1, $2, $3) RETURNING id`
 	var id int64
 	err := s.pool.QueryRow(ctx, query, c.Name, c.Phone, c.Status).Scan(&id)
@@ -25,9 +26,9 @@ func (s *Storage) CreateCourier(ctx context.Context, c Courier) (int64, error) {
 	return id, err
 }
 
-func (s *Storage) GetCourierById(ctx context.Context, id int64) (*Courier, error) {
+func (s *CourierPostgres) GetCourierById(ctx context.Context, id int64) (*model.Courier, error) {
 	query := `SELECT id, name, phone, status, created_at, updated_at FROM couriers WHERE id = $1`
-	var c Courier
+	var c model.Courier
 	err := s.pool.QueryRow(ctx, query, id).Scan(
 		&c.ID,
 		&c.Name,
@@ -43,9 +44,9 @@ func (s *Storage) GetCourierById(ctx context.Context, id int64) (*Courier, error
 	return &c, err
 }
 
-func (s *Storage) GetCouriers(ctx context.Context) ([]*Courier, error) {
+func (s *CourierPostgres) GetCouriers(ctx context.Context) ([]*model.Courier, error) {
 	query := `SELECT id, name, phone, status, created_at, updated_at FROM couriers`
-	var res []*Courier
+	var res []*model.Courier
 	rows, err := s.pool.Query(ctx, query)
 	if err != nil {
 		return nil, err
@@ -53,7 +54,7 @@ func (s *Storage) GetCouriers(ctx context.Context) ([]*Courier, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		c := Courier{}
+		c := model.Courier{}
 		err := rows.Scan(&c.ID, &c.Name, &c.Phone, &c.Status, &c.CreatedAt, &c.UpdatedAt)
 		if err != nil {
 			return nil, err
@@ -64,14 +65,14 @@ func (s *Storage) GetCouriers(ctx context.Context) ([]*Courier, error) {
 		return nil, err
 	}
 	if res == nil {
-		res = []*Courier{}
+		res = []*model.Courier{}
 	}
 
 	return res, nil
 
 }
 
-func (s *Storage) UpdateCourier(ctx context.Context, id int64, c Courier) error {
+func (s *CourierPostgres) UpdateCourier(ctx context.Context, id int64, c model.Courier) error {
 	query := `UPDATE couriers SET name = $1, phone = $2, status = $3, updated_at = now() WHERE id = $4`
 
 	res, err := s.pool.Exec(ctx, query, c.Name, c.Phone, c.Status, id)
