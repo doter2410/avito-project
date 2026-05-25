@@ -57,7 +57,8 @@ func main() {
 	repo := repository.NewCourierPostgres(psCon)
 
 	// 2. Создаем сервис (слой бизнес-логики), передаем ему БД
-	svc := service.NewCourierService(repo)
+	factory := service.NewDeliveryFactory()
+	svc := service.NewCourierService(repo, factory)
 
 	// 3. Создаем хэндлер (HTTP слой), передаем ему сервис
 	h := handler.NewCourierHandler(svc)

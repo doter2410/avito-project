@@ -3,7 +3,7 @@ include .env
 export PROJECT_ROOT=$(shell pwd)
 
 
-.PHONY: env-up env-down migrate-up migrate-up
+.PHONY: env-up env-down migrate-up migrate-up migrate-create
 
 env-up:
 	@docker compose up -d avito_postgres
@@ -18,3 +18,6 @@ migrate-up:
 
 migrate-down:
 	@GOOSE_DRIVER=postgres GOOSE_DBSTRING=$(DB_DSN) goose -dir ./migrations down
+
+migrate-create:
+	@goose -dir ./migrations create $(NAME) sql

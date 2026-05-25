@@ -23,6 +23,9 @@ func NewServer(port *string, logI *log.Logger, courierHandler *handler.CourierHa
 	r.Get("/couriers", courierHandler.GetAllCouriers)
 	r.Put("/couriers/{id}", courierHandler.PutUpdCourier)
 
+	r.Post("/delivery/assign", courierHandler.AssignDelivery)
+	r.Post("/delivery/unassign", courierHandler.UnassignDelivery)
+
 	var server = &Server{
 		Logger: logI,
 		HttpServer: &http.Server{
